@@ -69,7 +69,7 @@ module Carnivore
 
       def init_stream
         unless(user_stream)
-          supervise_as "#{name}_steam".to_sym, UserStream, streamer
+          supervise_as "#{name}_stream".to_sym, UserStream, streamer
         end
       end
 
