@@ -34,17 +34,17 @@ module Carnivore
 
       def setup(args={})
         @twit = args[:user_timeline]
-        @streaming args[:streaming]
+        @streaming = args[:streaming]
         @last_id = nil
         @poll_pause = args[:polling_wait] || 60
-        @client = Twitter::REST::Client.new do |c|
+        @client = ::Twitter::REST::Client.new do |c|
           c.consumer_key = args[:consumer_key]
           c.consumer_secret = args[:consumer_secret]
           c.access_token = args[:access_token]
           c.access_token_secret = args[:access_token_secret]
         end
         if(streaming)
-          @streamer = Twitter::Streaming::Client.new do |c|
+          @streamer = ::Twitter::Streaming::Client.new do |c|
             c.consumer_key = args[:consumer_key]
             c.consumer_secret = args[:consumer_secret]
             c.access_token = args[:access_token]
@@ -54,11 +54,29 @@ module Carnivore
       end
 
       def get_timeline(args={})
-        if(twit)
-          client.user_timeline(twit, args)
-        else
-          client.home_timeline(args)
+        result = nil
+        begin
+          if(twit)
+            result = client.user_timeline(twit, args)
+          else
+            result = client.home_timeline(args)
+          end
+          @limit_pause = nil
+          result
+        rescue ::Twitter::Error::TooManyRequests
+          debug 'Rate limit exceeded. Backing off.'
+          rate_limit_pause
+          retry
         end
+      end
+
+      def rate_limit_pause
+        if(@limit_pause)
+          @limit_pause *= 20
+        else
+          @limit_pause = 60
+        end
+        sleep(@limit_pause)
       end
 
       def init_timeline
@@ -85,7 +103,8 @@ module Carnivore
         init_timeline
         messages = []
         while(messages.empty?)
-          timeline = get_timeline(:since_id => last_id)
+          req_args = last_id ? {:since_id => last_id} : {}
+          timeline = get_timeline(req_args)
           if(timeline.empty?)
             debug 'No new events on timeline'
             sleep(poll_pause)
