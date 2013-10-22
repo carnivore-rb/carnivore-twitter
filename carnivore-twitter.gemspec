@@ -6,10 +6,10 @@ Gem::Specification.new do |s|
   s.summary = 'Message processing helper'
   s.author = 'Chris Roberts'
   s.email = 'chrisroberts.code@gmail.com'
-  s.homepage = 'https://github.com/heavywater/carnivore-twitter'
+  s.homepage = 'https://github.com/carnivore-rb/carnivore-twitter'
   s.description = 'Carnivore Twitter source'
   s.require_path = 'lib'
   s.add_dependency 'carnivore', '>= 0.1.8'
-  s.add_dependency 'twitter'
+  s.add_dependency 'twitter', '5.0.0.rc.1'
   s.files = Dir['**/*']
 end
