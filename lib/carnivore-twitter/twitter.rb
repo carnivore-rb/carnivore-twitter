@@ -80,9 +80,7 @@ module Carnivore
       end
 
       def init_timeline
-        unless(last_id)
-          last_id = get_timeline(:count => 1).first.id
-        end
+        last_id = get_timeline(:count => 1).first.id
       end
 
       def init_stream
@@ -103,15 +101,16 @@ module Carnivore
         init_timeline
         messages = []
         while(messages.empty?)
+          sleep(poll_pause)
           req_args = last_id ? {:since_id => last_id} : {}
           timeline = get_timeline(req_args)
           if(timeline.empty?)
             debug 'No new events on timeline'
-            sleep(poll_pause)
           else
             messages = timeline
           end
         end
+        last_id = messages.first.id unless messages.empty?
         messages.map(&:to_hash)
       end
 
